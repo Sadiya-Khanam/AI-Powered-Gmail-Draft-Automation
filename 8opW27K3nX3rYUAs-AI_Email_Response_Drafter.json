@@ -1,0 +1,168 @@
+{
+  "name": "AI Email Response Drafter",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        -144
+      ],
+      "id": "cfe600e1-1b44-4806-83b5-37d52ee9123e",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -224,
+        48
+      ],
+      "id": "2d781ae9-373e-4729-beab-454fa38e9840",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "B2QqXtzcAnTTF6pG",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Email Body:    {{ $json.snippet }}\nSubject Line: {{ $json.Subject }}",
+        "options": {
+          "systemMessage": "You are a helpful assistant .Your job is to draft a reply to the received mail.\nTone: Spartan, Professional and Friendly.Make sure not to use em-dashes and en-dashes in the reply.\nAdd placeholder where information needs to be specified.\nOnly respond with the email body ; dont't include any explaination.\nEnd the email by saying \"Best, \nSadiya \""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -16,
+        48
+      ],
+      "id": "bd4ee677-0fec-457b-808a-73076ff7e11e",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "={{ $('Gmail Trigger').item.json.Subject }}",
+        "message": "={{ $json.output }}",
+        "options": {
+          "sendTo": "={{ $('Gmail Trigger').item.json.From }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        336,
+        48
+      ],
+      "id": "cc0cd9f4-a676-4e23-83b5-a9c027f5e448",
+      "name": "Create a draft",
+      "webhookId": "26e90cbe-530a-47c2-8916-a1aade3ddcd8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "B2QqXtzcAnTTF6pG",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        256
+      ],
+      "id": "96bec88c-e942-488e-bed5-6bc387fc3e34",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "zJWvK49n7PFOmwXr",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Create a draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Gmail Trigger": {
+      "Gmail Trigger": {
+        "lastTimeChecked": 1755962452,
+        "possibleDuplicates": [
+          "198d784d79e6f0ef",
+          "198d77cdc408ee23"
+        ]
+      }
+    }
+  },
+  "pinData": {},
+  "triggerCount": 1,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}
